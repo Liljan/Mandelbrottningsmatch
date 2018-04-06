@@ -52,24 +52,23 @@ void Image::ExportPPM(const char * fileName)
 		out_file << "P3\n";
 		out_file << WIDTH << " " << HEIGHT << "\n";
 		out_file << "255\n";
+		
+		//float* current_pixel = m_pixelValues;
 
-		int r, g, b;
-		float* current_pixel = m_pixelValues;
-
-		// loop over each pixel in the image, clamp from 0 to 255, convert to char format and write to file. 
-		for (int h = 0; h < HEIGHT; ++h) {
-			for (int w = 0; w < WIDTH; ++w) {
-
-				r = std::max(0.0f, roundf(std::min(1.f, current_pixel[0]) * 255));
-				g = std::max(0.0f, roundf(std::min(1.f, current_pixel[1]) * 255));
-				b = std::max(0.0f, roundf(std::min(1.f, current_pixel[2]) * 255));
-
-				//out_file << r << " " << g << " " << b << " ";
+		#pragma omp parallel for
+		for (int h = 0; h < HEIGHT; ++h)
+		{
+			for (int w = 0; w < WIDTH; ++w)
+			{
+				int index = h * WIDTH + w;
+				int r = std::max(0.0f, roundf(std::min(1.f, m_pixelValues[index]) * 255));
+				int g = std::max(0.0f, roundf(std::min(1.f, m_pixelValues[index + 1]) * 255));
+				int b = std::max(0.0f, roundf(std::min(1.f, m_pixelValues[index + 2]) * 255));
 
 				out_file << static_cast<char>(r) << static_cast<char>(g) << static_cast<char>(b);
-				current_pixel += 3;
 			}
 		}
+
 		out_file.close();
 		std::cout << "Successfully saved image!" << std::endl;
 	}
